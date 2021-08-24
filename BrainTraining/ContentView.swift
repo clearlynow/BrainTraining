@@ -13,7 +13,8 @@ struct ContentView: View {
     @State var score = 0
     @State var scoreTitle = ""
     @State var turn = 0
-    @State var showingScore = false
+    @State var showAlert = false
+    @State var msg = ""
     
     var moves = ["Rock👊", "Paper🤚", "Scissors✌️"]
     
@@ -54,10 +55,19 @@ struct ContentView: View {
                     .padding(5.0)
                 }
             }
-            .alert(isPresented: $showingScore) {
-                            Alert(title: Text(scoreTitle), message: Text("Your score is \(score)"), dismissButton: .default(Text("Continue")) {
-                                self.startOver()
+            .alert(isPresented: $showAlert) {
+                if turn < 10 {
+                            return Alert(title: Text(msg), message: Text("Play: \(turn)/10"), dismissButton: .default(Text("Next Play")) {
+                                appMove = Int.random(in: 0...2)
+                                shouldWin = Bool.random()
                             })
+                }
+                else {
+                    return Alert(title: Text(msg), message: Text("Game Over! Your score is: \(score)"), dismissButton: .default(Text("Start Over")) {
+                        self.startOver()
+                    })
+                    
+                }
                         }
 
             
@@ -67,8 +77,12 @@ struct ContentView: View {
 
 
 func buttonTapped(_ play: Int) {
+    var tie: Bool {
+        play == appMove
+    }
+    
     var playerWins:  Bool  {
-        if (play == 0 && appMove == 3) ||
+        if (play == 0 && appMove == 2) ||
             (play == 1 && appMove == 0) ||
             (play == 2 && appMove == 1) {
             return true
@@ -77,25 +91,28 @@ func buttonTapped(_ play: Int) {
             return false
         }
     }
+    
     if (shouldWin && playerWins) || (!shouldWin && !playerWins) {
         print("+1")
+        if (shouldWin && playerWins) {msg = "Correct! \(moves[play]) beats \(moves[appMove])"}
+        if (!shouldWin && !playerWins && !tie) {msg = "Correct! \(moves[play]) loses to \(moves[appMove])"}
         score += 1
         } else {
+            if (shouldWin && !playerWins && !tie) {msg = "Nope! \(moves[play]) doesn't beat \(moves[appMove])"}
+            if (!shouldWin && playerWins) {msg = "Nope! \(moves[play]) doesn't lose to \(moves[appMove])"}
+            if (tie) {msg = "Nope! That's a tie!"}
             print("-1")
             score -= 1
         }
     turn += 1
     
-    if turn < 10 {
-        appMove = Int.random(in: 0...2)
-        shouldWin = Bool.random()
-        }
-    else{
-        showingScore = true
-    }
+    showAlert = true
+    
     }
 
 func startOver() {
+    appMove = Int.random(in: 0...2)
+    shouldWin = Bool.random()
     score = 0
     turn = 0
 }
